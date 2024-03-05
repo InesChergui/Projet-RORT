@@ -52,7 +52,7 @@ end # fin de la struct donnees
 
   #lines = readlines("test_data.txt") # le fichier contenant les donnees
   #lines = readlines("test_data_1.txt")
-  #lines = readlines("instance_N100_R50_O50_RS25")
+  lines = readlines("instances/instance_N100_R50_O50_RS25.txt")
   #lines = readlines("instance_N100_R100_O100_RS25")
   #lines = readlines("instance_N100_R100_O150_RS25")
   #lines = readlines("instance_N200_R50_O50_RS25")
@@ -65,7 +65,7 @@ end # fin de la struct donnees
   #lines = readlines("Data_test_N5_R2_O3_RS2.txt")
   #lines = readlines("Data_test_N7_R5_O8_RS5.txt") # ici 5/8 des ordres peuvent etre satisfaits
   #lines = readlines("Data_test_N7_R5_O6_RS7.txt")
-  lines = readlines("instances/Data_test_N10_R10_O10_RS7.txt") 
+  # lines = readlines("instances/Data_test_N10_R10_O10_RS7.txt") 
   #lines = readlines("Data_test_N12_R12_O12_RS8.txt")
   #lines = readlines("Data_test_N14_R14_O14_RS10.txt")  
 
@@ -100,12 +100,12 @@ for r in 1:R # parcours les racks
   num_line=7+r
   global line=lines[num_line]
   global line_decompose=split(line)
-  print("\n rack ",r,"\n")
+  # print("\n rack ",r,"\n")
   for i in 1:RS # parcours les shelves 
     num_prod=parse(Int64,line_decompose[2*i])
     quantite=parse(Int64,line_decompose[1+2*i])
 
-    print(num_prod," ",quantite," ")
+    # print(num_prod," ",quantite," ")
     # Attention les produits vont de 0 - N-1
     Data.S[num_prod+1][r]=quantite
   end
@@ -117,12 +117,12 @@ for o in 1:O # parcours les ordres
   global line_decompose=split(line)
   
   nbre_prod_inside_ordre=parse(Int64,line_decompose[2])
-  print("\n ordre ",o," ",nbre_prod_inside_ordre,"\n")
+  # print("\n ordre ",o," ",nbre_prod_inside_ordre,"\n")
   for i in 1:nbre_prod_inside_ordre
     num_prod=parse(Int64,line_decompose[2+i])
     # Attention numero de produit vont de 0 - N-1
     Data.Q[num_prod+1][o]+=1
-    println("num produit ", num_prod," ",Data.Q[num_prod+1][o])
+    # println("num produit ", num_prod," ",Data.Q[num_prod+1][o])
   end
 end
 
