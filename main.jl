@@ -37,7 +37,7 @@ function slaveProblemOrders(alpha)
     
     @constraint(m, [o in Data.FO], sum(x[p, o] for p in 1:Data.P) == 1 )
     @constraint(m, [o in Data.SO], sum(x[p, o] for p in 1:Data.P) <= 1 )
-    @constraint(m, [p in 1:Data.P], sum(x[p, o] for o in 1:O) <= Data.Capa[p])
+    @constraint(m, [p in 1:Data.P], sum(x[p, o] for o in 1:Data.O) <= Data.Capa[p])
 
     @objective(m, Min, sum(x[p, o] * alpha[p, i] * Data.Q[i][o] for o in 1:Data.O, p in 1:Data.P, i in 1:Data.N) - sum(x[p, o] for p in 1:Data.P, o in Data.SO))
 
@@ -47,6 +47,8 @@ function slaveProblemOrders(alpha)
     if feasible_solution_found
         v_obj = JuMP.objective_value(m)
         vX = JuMP.value.(x)
+        #println("Modèle orders ")
+        #println(m)
         return v_obj, vX
     else
         println("No solution for order subproblem")
@@ -59,7 +61,7 @@ function slaveProblemRacks(alpha)
     @variable(m, y[1:Data.P, 1:Data.R], Bin)
     @constraint(m, [r in 1:Data.R], sum(y[p, r] for p in 1:Data.P) <= 1)
 
-    @objective(m, Min, sum(y[p, r] for p in 1:Data.P, r in 1:Data.R) * (length(Data.SO) + 1) - sum(alpha[p, i] * y[p, r] * Data.S[i][r] for p in 1:Data.P, r in 1:Data.R, i in 1:N))
+    @objective(m, Min, sum(y[p, r] for p in 1:Data.P, r in 1:Data.R) * (length(Data.SO) + 1) - sum(alpha[p, i] * y[p, r] * Data.S[i][r] for p in 1:Data.P, r in 1:Data.R, i in 1:Data.N))
 
     optimize!(m)
 
@@ -67,6 +69,8 @@ function slaveProblemRacks(alpha)
     if feasible_solution_found
         v_obj = JuMP.objective_value(m)
         vY = JuMP.value.(y)
+        #println("Modèle racks ")
+        #println(m)
         return v_obj, vY
     else
         println("No solution for rack subproblem")
@@ -93,8 +97,7 @@ function masterProblem(orders, racks)
         Alpha = JuMP.dual.(alpha)
         Etar = JuMP.dual(etar)
         Etao = JuMP.dual(etao)
-        #println(m)
-        return v_obj, - Alpha, - Etao, - Etar
+        return v_obj, - Alpha, Etao, Etar
     else
         println("No solution for master problem")
     end
@@ -123,9 +126,9 @@ function dualCuttingPlanes()
         optimize!(m)
         v_obj = JuMP.objective_value(m)
         println("Valeur de l'objectif courrant : ", v_obj)
-        Alpha = JuMP.value.(alpha)
-        Etao = JuMP.value(etao)
-        Etar = JuMP.value(etar)
+        Alpha = - JuMP.value.(alpha)
+        Etao =  - JuMP.value(etao)
+        Etar =  - JuMP.value(etar)
 
         vr, xr = slaveProblemRacks(Alpha)
         vo, xo = slaveProblemOrders(Alpha)
@@ -154,14 +157,13 @@ function columnGeneration()
         println("Valeur courrante du problème maître : ", v_obj)
         vr, xr = slaveProblemRacks(Alpha)
         vo, xo = slaveProblemOrders(Alpha)
-        println(vo + vr)
-        if vr - Etar < 0
+        if vr - Etar < 1e-5
             push!(racks, xr)
         end
-        if vo - Etao < 0
+        if vo - Etao < 1e-5
             push!(orders, xo)
         end
-        if vr - Etar >= 0 && vo - Etao >= 0
+        if vr - Etar >= -1e-5 && vo - Etao >= -1e-5
             optimal = true
         end
         iter += 1
@@ -170,10 +172,10 @@ function columnGeneration()
 end
 
 
-P = 2
+P = 5
 capa = Vector{Int}([12, 12, 12, 12, 12])
-FO = 1:2
-SO = [3]
+FO = 1:25
+SO = 26:50
 
 Data.P = P
 Data.Capa = capa
@@ -183,5 +185,6 @@ sort!(Data.Capa, rev=true)
 
 
 println("TEST")
-PLNE()
+#PLNE()
 columnGeneration()
+
