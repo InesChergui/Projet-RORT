@@ -1,5 +1,6 @@
 using JuMP
 using CPLEX
+using Plots
 
 include("lecture.jl")
 include("greedy.jl")
@@ -105,58 +106,24 @@ function masterProblem(orders, racks)
 end
 
 
-function dualCuttingPlanes()
-    Alpha = zeros(Data.P, Data.N)
-    xo = initialOrders()
-    xr = initialRacks(xo)
-
-    m = Model(optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_ScreenOutput" => 0))
-
-    @variable(m, etao)
-    @variable(m, etar)
-    @variable(m, alpha[1:Data.P, 1:Data.N] >= 0)
-
-    @constraint(m, etao - sum(alpha[p, i] * Data.Q[i][o] * xo[p, o] for p in 1:Data.P, i in 1:Data.N, o in 1:Data.O) + sum(xo[p, o] for p in 1:Data.P, o in Data.SO) <= 0)
-    @constraint(m, etar + sum(alpha[p, i] * Data.S[i][r] * xr[p, r] for p in 1:Data.P, i in 1:Data.N, r in 1:Data.R) - (length(Data.SO) + 1) * sum(xr[p, r] for p in 1:Data.P, r in 1:Data.R) <= 0)
-    @objective(m, Max, etao + etar)
-
-    optimal = false
-
-    while !optimal
-        optimize!(m)
-        v_obj = JuMP.objective_value(m)
-        println("Valeur de l'objectif courrant : ", v_obj)
-        Alpha = - JuMP.value.(alpha)
-        Etao =  - JuMP.value(etao)
-        Etar =  - JuMP.value(etar)
-
-        vr, xr = slaveProblemRacks(Alpha)
-        vo, xo = slaveProblemOrders(Alpha)
-
-        if vr - Etar < 0
-            @constraint(m, etar + sum(alpha[p, i] * Data.S[i][r] * xr[p, r] for p in 1:Data.P, i in 1:Data.N, r in 1:Data.R) - (length(Data.SO) + 1) * sum(xr[p, r] for p in 1:Data.P, r in 1:Data.R) <= 0)
-        end
-        if vo - Etao < 0
-            @constraint(m, etao - sum(alpha[p, i] * Data.Q[i][o] * xo[p, o] for p in 1:Data.P, i in 1:Data.N, o in 1:Data.O) + sum(xo[p, o] for p in 1:Data.P, o in Data.SO) <= 0)
-        end
-        if vr - Etar >= 0 && vo - Etao >= 0
-            optimal = true
-        end
-    end
-end
-
 function columnGeneration()
     Alpha = zeros(Data.P, Data.N)
     orders = [slaveProblemOrders(Alpha)[2]]
     racks = [slaveProblemRacks(Alpha)[2]]
     optimal = false
     v_obj = -1
-    iter = 0
+    iter = 1
+    plotDataMaster = []
+    plotDataDual = []
+    iters = []
     while !optimal
         v_obj, Alpha, Etao, Etar = masterProblem(orders, racks)
+        push!(plotDataMaster, v_obj)
         println("Valeur courrante du problème maître : ", v_obj)
         vr, xr = slaveProblemRacks(Alpha)
         vo, xo = slaveProblemOrders(Alpha)
+        push!(plotDataDual, vo + vr)
+        push!(iters, iter)
         if vr - Etar < 1e-5
             push!(racks, xr)
         end
@@ -168,14 +135,14 @@ function columnGeneration()
         end
         iter += 1
     end
-    return v_obj
+    return v_obj, iters, plotDataMaster, plotDataDual
 end
 
 
 P = 5
 capa = Vector{Int}([12, 12, 12, 12, 12])
-FO = 1:25
-SO = 26:50
+FO = 1:5
+SO = 6:10
 
 Data.P = P
 Data.Capa = capa
@@ -186,5 +153,6 @@ sort!(Data.Capa, rev=true)
 
 println("TEST")
 #PLNE()
-columnGeneration()
-
+v_obj, iters, plotMaster, plotDual = columnGeneration()
+plot(iters[7:end], plotMaster[7:end])
+plot!(iters[7:end], plotDual[7:end])
