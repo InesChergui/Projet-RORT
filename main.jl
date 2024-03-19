@@ -78,11 +78,12 @@ function masterProblem(orders, racks)
 
     @variable(m, lo[1:length(orders)] >= 0)
     @variable(m, lr[1:length(racks)] >= 0)
+    @variable(m, s >= 0)
 
     @constraint(m, etao, sum(lo[i] for i in 1:length(orders)) == 1)
     @constraint(m, etar, sum(lr[i] for i in 1:length(racks)) == 1)
-    @constraint(m, alpha[p in 1:Data.P, i in 1:Data.N], sum(lo[k] * Data.Q[i][o] * orders[k][p, o] for k in 1:length(orders), o in 1:Data.O) <= sum(lr[k] * Data.S[i][r] * racks[k][p, r] for k in 1:length(racks), r in 1:Data.R))
-    @objective(m, Min, (length(Data.SO) + 1) * sum(lr[k] * racks[k][p, r] for k in 1:length(racks), p in 1:Data.P, r in 1:Data.R) - sum(lo[k] * orders[k][p, o] for k in 1:length(orders), p in 1:Data.P, o in Data.SO))
+    @constraint(m, alpha[p in 1:Data.P, i in 1:Data.N], sum(lo[k] * Data.Q[i][o] * orders[k][p, o] for k in 1:length(orders), o in 1:Data.O) <= s + sum(lr[k] * Data.S[i][r] * racks[k][p, r] for k in 1:length(racks), r in 1:Data.R))
+    @objective(m, Min, 10000 * s + (length(Data.SO) + 1) * sum(lr[k] * racks[k][p, r] for k in 1:length(racks), p in 1:Data.P, r in 1:Data.R) - sum(lo[k] * orders[k][p, o] for k in 1:length(orders), p in 1:Data.P, o in Data.SO))
 
     optimize!(m)
 
@@ -92,7 +93,8 @@ function masterProblem(orders, racks)
         Alpha = JuMP.dual.(alpha)
         Etar = JuMP.dual(etar)
         Etao = JuMP.dual(etao)
-        return v_obj, Alpha, Etao, Etar
+        #println(m)
+        return v_obj, - Alpha, - Etao, - Etar
     else
         println("No solution for master problem")
     end
@@ -142,8 +144,8 @@ end
 
 function columnGeneration()
     Alpha = zeros(Data.P, Data.N)
-    orders = [initialOrders()]
-    racks = [initialRacks(orders[1])]
+    orders = [slaveProblemOrders(Alpha)[2]]
+    racks = [slaveProblemRacks(Alpha)[2]]
     optimal = false
     v_obj = -1
     iter = 0
@@ -152,6 +154,7 @@ function columnGeneration()
         println("Valeur courrante du problème maître : ", v_obj)
         vr, xr = slaveProblemRacks(Alpha)
         vo, xo = slaveProblemOrders(Alpha)
+        println(vo + vr)
         if vr - Etar < 0
             push!(racks, xr)
         end
@@ -167,10 +170,10 @@ function columnGeneration()
 end
 
 
-P = 5
+P = 2
 capa = Vector{Int}([12, 12, 12, 12, 12])
-FO = 1:5
-SO = 6:50
+FO = 1:2
+SO = [3]
 
 Data.P = P
 Data.Capa = capa
@@ -179,5 +182,6 @@ Data.SO = SO
 sort!(Data.Capa, rev=true)
 
 
+println("TEST")
 PLNE()
 columnGeneration()

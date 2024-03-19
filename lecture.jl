@@ -55,13 +55,13 @@ end # fin de la struct donnees
   #lines = readlines("instances/instance_N100_R50_O50_RS25.txt")
   #lines = readlines("instances/instance_N100_R100_O100_RS25.txt")
   #lines = readlines("instances/instance_N100_R100_O150_RS25.txt")
-  lines = readlines("instances/instance_N200_R50_O50_RS25.txt")
+  #lines = readlines("instances/instance_N200_R50_O50_RS25.txt")
   #lines = readlines("instances/instance_N200_R100_O100_RS25.txt")
   #lines = readlines("instances/instance_N300_R50_O50_RS25.txt")
 
   #lines = readlines("Data_test.txt")
   #lines = readlines("instances/Data_test_N5_R4_O3_RS2.txt")
-  #lines = readlines("instances/Data_test_N5_R3_O3_RS5.txt")
+  lines = readlines("instances/Data_test_N5_R3_O3_RS5.txt")
   #lines = readlines("instances/Data_test_N5_R2_O3_RS2.txt")
   #lines = readlines("instances/Data_test_N7_R5_O8_RS5.txt") # ici 5/8 des ordres peuvent etre satisfaits
   #lines = readlines("instances/Data_test_N7_R5_O6_RS7.txt")
