@@ -3,17 +3,6 @@ using CPLEX
 
 include("lecture.jl")
 
-println(Data.Q)
-println(Data.S)
-
-# Data = donnees(3, 3, 2, 1)
-# Data.Q = [[1, 0],
-#           [0, 1],
-#           [1, 0]]
-# Data.S = [[1, 0, 0],
-#           [0, 1, 0],
-#           [0, 0, 1]]
-
 P = 1
 capa = Vector{Int}([12, 12, 12, 12, 12])
 FO = 1:25
@@ -31,7 +20,7 @@ m = Model(CPLEX.Optimizer)
 @variable(m, alpha >= 0)
 @variable(m, x[1:Data.O, 1:Data.R], Bin)
 @variable(m, z[1:Data.R, 1:Data.R], Bin)
-@variable(m, y[1:Data.O, 1:Data.N, 1:Data.R] >= 0)
+@variable(m, y[1:Data.O, 1:Data.N, 1:Data.R], Int)
 @variable(m, u[1:Data.O, 1:Data.R], Bin)
 @variable(m, v[1:Data.O, 1:Data.R], Bin)
 
