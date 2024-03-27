@@ -227,7 +227,7 @@ instanceNames = [#"Data_test_N5_R2_O3_RS2",
                  #"instance_N200_R100_O150_RS25",
                  #"instance_N300_R50_O50_RS25",
                  #"instance_N300_R100_O100_RS25",
-                 "instance_N300_R100_O150_RS25"
+                 #"instance_N300_R100_O150_RS25"
                  ]
 
 
